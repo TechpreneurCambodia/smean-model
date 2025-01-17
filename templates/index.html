@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload or Record Audio</title>
+    <script>
+        async function handleFormSubmit(event, formId) {
+            event.preventDefault();
+            const form = document.getElementById(formId);
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                // Update the output section
+                const outputSection = document.getElementById('output');
+                if (result.error) {
+                    outputSection.innerHTML = `<p style="color: red;">Error: ${result.error}</p>`;
+                } else {
+                    outputSection.innerHTML = `
+                        <h3>Output:</h3>
+                        <p><strong>Transcription:</strong> ${result.transcription}</p>
+                        <p><strong>Correction:</strong> ${result.correction}</p>
+                        <p><strong>Response:</strong> ${result.response}</p>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error submitting the form:', error);
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Upload or Record Your Voice</h1>
+
+    <!-- Upload Section -->
+    <form id="upload-form" onsubmit="handleFormSubmit(event, 'upload-form')" enctype="multipart/form-data">
+        <label for="audio">Choose a .wav file:</label>
+        <input type="file" id="audio" name="audio" accept=".wav" required>
+        <button type="submit">Submit</button>
+    </form>
+
+    <hr>
+
+    <!-- Recording Section -->
+    <h2>Record Your Voice</h2>
+    <button id="start-recording">Start Recording</button>
+    <button id="stop-recording" disabled>Stop Recording</button>
+    <p id="recording-status">Status: Not recording</p>
+
+    <!-- Hidden Form for Recorded Audio -->
+    <form id="record-form" onsubmit="handleFormSubmit(event, 'record-form')" enctype="multipart/form-data" style="display: none;">
+        <input type="file" id="recorded-audio" name="audio" style="display: none;">
+        <button type="submit">Submit Recording</button>
+    </form>
+
+    <hr>
+
+    <!-- Output Section -->
+    <div id="output">
+        <h3>Output will appear here</h3>
+    </div>
+
+    <script>
+        const startButton = document.getElementById('start-recording');
+        const stopButton = document.getElementById('stop-recording');
+        const statusText = document.getElementById('recording-status');
+        const recordForm = document.getElementById('record-form');
+        const recordedAudioInput = document.getElementById('recorded-audio');
+
+        let mediaRecorder;
+        let audioChunks = [];
+
+        // Start recording
+        startButton.addEventListener('click', async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const blob = new Blob(audioChunks, { type: 'audio/wav' });
+                    audioChunks = [];
+                    
+                    // Create a file object from the blob
+                    const file = new File([blob], 'recording.wav', { type: 'audio/wav' });
+                    
+                    // Create a data transfer object to simulate file input
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+
+                    // Assign the file to the hidden input
+                    recordedAudioInput.files = dataTransfer.files;
+
+                    // Show the form to submit the recording
+                    recordForm.style.display = 'block';
+                };
+
+                mediaRecorder.start();
+                statusText.textContent = 'Status: Recording...';
+                startButton.disabled = true;
+                stopButton.disabled = false;
+            } catch (error) {
+                console.error('Error accessing microphone:', error);
+            }
+        });
+
+        // Stop recording
+        stopButton.addEventListener('click', () => {
+            mediaRecorder.stop();
+            statusText.textContent = 'Status: Recording stopped';
+            startButton.disabled = false;
+            stopButton.disabled = true;
+        });
+    </script>
+</body>
+</html>
