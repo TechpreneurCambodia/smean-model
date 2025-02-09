@@ -1,10 +1,30 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory, url_for
 import os
 import librosa
 import soundfile as sf  # To save audio files
 from transformers import pipeline
 import soundfile as sf
 from response_logic import prompt_category, prompt_response, prompt_correction
+
+import numpy as np
+from scipy.io.wavfile import write
+import os
+os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
+
+# Set up pipeline for TTS
+tts_pipe = pipeline("text-to-speech", model="facebook/mms-tts-khm", device=-1)
+
+UPLOAD_FOLDER = 'uploads'
+OUTPUT_FOLDER = 'outputs'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(OUTPUT_FOLDER, exist_ok=True)
+
+
+# Allowed file extensions
+ALLOWED_EXTENSIONS = {'wav', 'flac'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 pipe = pipeline("automatic-speech-recognition", model="SSethisak/xlsr-khmer-fleur", device=-1)
 
@@ -39,9 +59,21 @@ def audio_prompt_response(audio):
         print("Transcription:", transcription["text"])
         correction = prompt_correction(transcription["text"])
         print("Correction:", correction)
-        response = prompt_response(correction)
-        print("Response:", response.text)
-        return transcription, correction, response
+        # response = prompt_response(correction)
+        # print("Response:", response.text)
+
+        #     # Generate TTS audio
+        # tts_response = tts_pipe(response.text)
+        # audio_data = tts_response['audio'].flatten()
+        # scaled_audio = np.int16(audio_data * 32767)
+
+        # output_filename = os.path.join("outputs", f"response_audio{os.path.basename(audio)}")
+        # print(output_filename)
+        # write(output_filename, tts_response['sampling_rate'], scaled_audio)
+        # response = "hello world"
+        # output_filename = "andnsjdsansas"
+
+        return transcription, correction
     except Exception as e:
         print(f"Error in audio_prompt_response: {e}")
         return f"Error: {e}"
@@ -52,6 +84,8 @@ app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+app.config['OUTPUT_FOLDER'] = OUTPUT_FOLDER
 
 # Allowed file extensions
 ALLOWED_EXTENSIONS = {'wav'}
@@ -77,16 +111,24 @@ def upload_file():
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
         file.save(filepath)
 
-        transcription, correction, response = audio_prompt_response(filepath)
+        transcription, correction = audio_prompt_response(filepath)
         transcription_text = transcription["text"]
         correction_text = correction
-        response_text = response.text
+        # response_text = response.text
+
+        #audio_url = url_for('serve_file', filename=audio_path)
         return jsonify({
-                "transcription": transcription_text,
-                "correction": correction_text,
-                "response": response_text
-            })
+            "transcription": transcription_text,
+            "correction": correction_text,
+            # "response": response_text,
+            
+        })
     return jsonify({"error": "Invalid file"}), 400
 
-if __name__ == '__main__':
+# @app.route('/output/<filename>')
+# def serve_file(filename):
+#     return send_from_directory(app.config['OUTPUT_FOLDER'], filename)
+
+
+if __name__ == 'main':
     app.run(debug=True)
