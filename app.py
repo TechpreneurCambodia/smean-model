@@ -4,7 +4,7 @@ import librosa
 import soundfile as sf  # To save audio files
 from transformers import pipeline
 import soundfile as sf
-from response_logic import prompt_category, prompt_response, prompt_correction
+from response_logic import prompt_correction
 
 import numpy as np
 from scipy.io.wavfile import write
