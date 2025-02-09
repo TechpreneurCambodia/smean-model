@@ -16,7 +16,7 @@ generation_config = {
   "max_output_tokens": 8192,
   "response_mime_type": "text/plain",
 }
-genai.configure(api_key="AIzaSyBeBKUl5kF_HrhmgxFqyYLsMPpUmj9Frmg")
+genai.configure(api_key="API_KEY")
 
 model = genai.GenerativeModel(
   model_name="gemini-2.0-flash-exp",
