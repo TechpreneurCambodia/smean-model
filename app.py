@@ -3,13 +3,13 @@ import os
 import librosa
 import soundfile as sf  # To save audio files
 from transformers import pipeline
-import soundfile as sf
 from response_logic import prompt_correction
 
 import numpy as np
 from scipy.io.wavfile import write
 import os
 os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
+from flask_cors import CORS
 
 # Set up pipeline for TTS
 tts_pipe = pipeline("text-to-speech", model="facebook/mms-tts-khm", device=-1)
@@ -59,19 +59,6 @@ def audio_prompt_response(audio):
         print("Transcription:", transcription["text"])
         correction = prompt_correction(transcription["text"])
         print("Correction:", correction)
-        # response = prompt_response(correction)
-        # print("Response:", response.text)
-
-        #     # Generate TTS audio
-        # tts_response = tts_pipe(response.text)
-        # audio_data = tts_response['audio'].flatten()
-        # scaled_audio = np.int16(audio_data * 32767)
-
-        # output_filename = os.path.join("outputs", f"response_audio{os.path.basename(audio)}")
-        # print(output_filename)
-        # write(output_filename, tts_response['sampling_rate'], scaled_audio)
-        # response = "hello world"
-        # output_filename = "andnsjdsansas"
 
         return transcription, correction
     except Exception as e:
@@ -79,6 +66,10 @@ def audio_prompt_response(audio):
         return f"Error: {e}"
 
 app = Flask(__name__)
+
+# Set up orgin for CORS
+CORS(app, resources={r"/*": {"origins": os.environ.get("BACKEND_URL")}})
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 # Set the upload folder
 UPLOAD_FOLDER = 'uploads'
@@ -130,5 +121,5 @@ def upload_file():
 #     return send_from_directory(app.config['OUTPUT_FOLDER'], filename)
 
 
-if __name__ == 'main':
+if __name__ == '__main__':
     app.run(debug=True)
