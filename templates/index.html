@@ -40,7 +40,7 @@
     <!-- Upload Section -->
     <form id="upload-form" onsubmit="handleFormSubmit(event, 'upload-form')" enctype="multipart/form-data">
         <label for="audio">Choose a .wav file:</label>
-        <input type="file" id="audio" name="audio" accept=".wav" required>
+        <input type="file" id="file" name="file" accept=".wav" required>
         <button type="submit">Submit</button>
     </form>
 
@@ -54,7 +54,7 @@
 
     <!-- Hidden Form for Recorded Audio -->
     <form id="record-form" onsubmit="handleFormSubmit(event, 'record-form')" enctype="multipart/form-data" style="display: none;">
-        <input type="file" id="recorded-audio" name="audio" style="display: none;">
+        <input type="file" id="recorded-file" name="file" style="display: none;">
         <button type="submit">Submit Recording</button>
     </form>
 
@@ -70,7 +70,7 @@
         const stopButton = document.getElementById('stop-recording');
         const statusText = document.getElementById('recording-status');
         const recordForm = document.getElementById('record-form');
-        const recordedAudioInput = document.getElementById('recorded-audio');
+        const recordedAudioInput = document.getElementById('recorded-file');
 
         let mediaRecorder;
         let audioChunks = [];
