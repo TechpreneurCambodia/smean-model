@@ -34,3 +34,12 @@ def prompt_correction(prompt):
   )
   response = model.generate_content(prompt)
   return response.text
+
+def prompt_summary(prompt):
+  model = genai.GenerativeModel(
+    model_name="gemini-2.0-flash-exp",
+    generation_config=generation_config,
+    system_instruction="With the following prompt i provide in khmer, i want you to respond by giving a summary of what the prompt i gave to you said. just return the summary of the prompt and nothing else. no explanation is required.",
+  )
+  response = model.generate_content(prompt)
+  return response.text

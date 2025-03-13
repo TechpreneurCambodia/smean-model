@@ -3,7 +3,7 @@ import os
 import librosa
 import soundfile as sf  # To save audio files
 from transformers import pipeline
-from response_logic import prompt_correction
+from response_logic import prompt_correction, prompt_summary
 
 from utils import *
 import numpy as np
@@ -57,7 +57,8 @@ def audio_prompt_response(audio):
         data, samplerate = sf.read(resampled_audio)
         transcription = pipe(data)
         correction = prompt_correction(transcription["text"])
-        return transcription, correction
+        summary = prompt_summary(correction)
+        return correction, summary
     except Exception as e:
         print(f"Error in audio processing: {e}")
         return f"Error: {e}"
