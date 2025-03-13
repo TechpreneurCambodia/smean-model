@@ -17,13 +17,14 @@ def upload_file():
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
         file.save(filepath)   # Audio file need to be saved to generate transcription
         try:
-            transcription, correction = audio_prompt_response(filepath)
-            transcription_text = transcription['text']
-            correction_text = correction
+            transcription_text, summary = audio_prompt_response(filepath)
+            # transcription_text = transcription['text']
+            summary_text = summary
             print("Transcription: ", transcription_text)
+            print("Summary text: ", summary_text)
         except Exception as e:
             transcription_text = "Error"
-            correction_text = "Error"
+            summary_text = "Error"
             print(f"Error in audio processing: {e}")
 
         return model_response(
@@ -31,7 +32,7 @@ def upload_file():
             content=transcription_text, 
             noteType="audio", 
             transcription=transcription_text, 
-            summary=correction_text,
+            summary=summary_text,
         )
         
     return jsonify({
